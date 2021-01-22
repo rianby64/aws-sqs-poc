@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	maxNumberOfMessages      = 10
-	waitTimeSeconds          = 10
-	nextDelayIncreaseSeconds = 1
-	retrySecondsToListen     = 5
-	timeoutSecondsDefault    = 5
+	maxNumberOfMessages             = 10
+	waitTimeSeconds                 = 10
+	retrySecondsToListen            = 5
+	timeoutSecondsDefault           = 5
+	nextDelayIncreaseSecondsDefault = 1 /// TODO: use this variable correctly
 )
 
 // These are the error definitions
@@ -27,9 +27,10 @@ type mySQSSession interface {
 
 // queueSQS - A queue backed by SQS.
 type queueSQS struct {
-	SQS            mySQSSession
-	URL            string
-	TimeoutSeconds int
+	SQS                      mySQSSession
+	URL                      string
+	TimeoutSeconds           int
+	NextDelayIncreaseSeconds int
 }
 
 // MessageHandler eje!!

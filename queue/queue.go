@@ -11,7 +11,7 @@ import (
 
 // Put sends something to the queue
 func (q *queueSQS) Put(msg string, delaySeconds int64) error {
-	nextDelay := delaySeconds + nextDelayIncreaseSeconds
+	nextDelay := delaySeconds + nextDelayIncreaseSecondsDefault
 	messageAttributes := map[string]*sqs.MessageAttributeValue{
 		"NextDelayRetry": {
 			DataType:    aws.String("Number"),
