@@ -1,0 +1,75 @@
+
+func hereWeGo() error {
+	ws, err := createConnectionWS(Env.Conf.SlackToken)
+	if err != nil {
+		return err
+	}
+
+	i := 0
+	for event := range listenToEvents(ws) {
+		i++
+		fmt.Println(event, i)
+	}
+	return nil
+}
+
+func listenToEvents(ws *websocket.Conn) chan map[string]interface{} {
+	event := make(chan map[string]interface{})
+	respJSON := map[string]interface{}{}
+
+	go func() {
+		for {
+
+			if err := websocket.JSON.Receive(ws, &respJSON); err != nil {
+				log.Error(err)
+				continue
+			}
+
+			ackJSON := map[string]interface{}{
+				"envelope_id": respJSON["envelope_id"],
+			}
+
+			if err := websocket.JSON.Send(ws, &ackJSON); err != nil {
+				log.Error(err)
+				continue
+			}
+
+			event <- respJSON
+		}
+	}()
+
+	return event
+}
+
+func createConnectionWS(token string) (*websocket.Conn, error) {
+	reqBody, _ := json.Marshal(map[string]string{})
+	reqreq, err := http.NewRequest("POST", "https://slack.com/api/apps.connections.open", bytes.NewBuffer(reqBody))
+
+	reqreq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	reqreq.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	resp, err := http.DefaultClient.Do(reqreq)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	respJSON := map[string]interface{}{}
+	if err := json.Unmarshal(body, &respJSON); err != nil {
+		return nil, err
+	}
+
+	ws, err := websocket.Dial(respJSON["url"].(string), "wss", "https://localhost")
+	if err != nil {
+		return nil, err
+	}
+
+	// here we read the hello message
+	if err := websocket.JSON.Receive(ws, &respJSON); err != nil {
+		return nil, err
+	}
+
+	return ws, nil
+}
