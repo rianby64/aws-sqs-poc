@@ -209,7 +209,33 @@ func Test_resendMessage_OK(t *testing.T) {
 		},
 	}
 
-	queue.resendMessage(&msg)
+	err := queue.resendMessage(&msg)
+	assert.Nil(t, err)
 	assert.Equal(t, expectedRetry, *session.LastNextDelayRetry)
 	assert.Equal(t, expectedBody, *session.LastBodySent)
+}
+
+func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
+	session := &Mock4handleMessageAWSSession{}
+	queue := queueSQS{
+		SQS:                      session,
+		URL:                      "",
+		TimeoutSeconds:           1,
+		NextDelayIncreaseSeconds: 3,
+	}
+
+	incorrectNumber := "NaN"
+	msg := sqs.Message{}
+	msg.Body = aws.String("")
+	msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		"NextDelayRetry": {
+			DataType:    aws.String("number"),
+			StringValue: aws.String(incorrectNumber),
+		},
+	}
+
+	expectedErrorStr := fmt.Sprintf(`Incorrect value of NextDelayRetry: strconv.ParseInt: parsing "%s": invalid syntax`, incorrectNumber)
+	err := queue.resendMessage(&msg)
+	assert.NotNil(t, err)
+	assert.Equal(t, expectedErrorStr, err.Error())
 }

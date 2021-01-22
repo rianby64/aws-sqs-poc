@@ -74,7 +74,7 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 		delayRetryValue, err := strconv.ParseInt(*delayRetryAttr.StringValue, 10, 64)
 
 		if err != nil {
-			return errors.Wrap(err, "NextDelayRetry incorrect")
+			return errors.Wrap(err, "Incorrect value of NextDelayRetry")
 		}
 
 		delayRetry = delayRetryValue
