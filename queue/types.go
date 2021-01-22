@@ -9,6 +9,7 @@ const (
 	waitTimeSeconds          = 10
 	nextDelayIncreaseSeconds = 1
 	retrySecondsToListen     = 5
+	timeoutSecondsDefault    = 5
 )
 
 // mySQSSession jajaja
