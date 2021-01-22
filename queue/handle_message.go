@@ -11,7 +11,7 @@ import (
 )
 
 // handleMessage - Performs work on a message with configured timeout.
-func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) error {
+func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) {
 	timeoutSeconds := q.TimeoutSeconds
 	if timeoutSeconds == 0 {
 		timeoutSeconds = timeoutSecondsDefault
@@ -23,7 +23,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) error {
 	}
 
 	go func() {
-		if _, err := q.SQS.DeleteMessage(&params); err != nil {
+		if _, err = q.SQS.DeleteMessage(&params); err != nil {
 			log.Errorf("deleting message from queue: %v", err)
 			releaseWait <- true
 
@@ -44,7 +44,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) error {
 	select {
 	case <-releaseWait:
 		log.Info("Processed message from queue")
-		return nil
+		return err
 	case <-time.After(time.Second * time.Duration(timeoutSeconds)):
 		return errors.New("Timeout processing message from queue")
 	}
