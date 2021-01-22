@@ -2,6 +2,7 @@ package queue
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -17,10 +18,14 @@ type Mock4handleMessageAWSSession struct {
 	ShouldDeleteMessageFail  bool
 	DeleteMessageFailError   string
 	DeleteMessageTimeout     int64
+	LastNextDelayRetry       *string
+	LastBodySent             *string
 }
 
 func (a *Mock4handleMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	a.TimesCalledSendMessage++
+	a.LastNextDelayRetry = input.MessageAttributes["NextDelayRetry"].StringValue
+	a.LastBodySent = input.MessageBody
 	return nil, nil
 }
 
@@ -180,4 +185,30 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 	assert.Equal(t, 1, session.TimesCalledDeleteMessage)
 	assert.Equal(t, 0, session.TimesCalledSendMessage)
 	assert.Equal(t, expectedReceipt, session.Receipt)
+}
+
+func Test_resendMessage_OK(t *testing.T) {
+	session := &Mock4handleMessageAWSSession{}
+	queue := queueSQS{
+		SQS:            session,
+		URL:            "",
+		TimeoutSeconds: 1,
+	}
+
+	currentRetry := 10
+	expectedBody := "something to send"
+	expectedRetry := fmt.Sprintf("%d", currentRetry+queue.TimeoutSeconds)
+
+	msg := sqs.Message{}
+	msg.Body = aws.String(expectedBody)
+	msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		"NextDelayRetry": {
+			DataType:    aws.String("number"),
+			StringValue: aws.String(fmt.Sprintf("%d", currentRetry)),
+		},
+	}
+
+	queue.resendMessage(&msg)
+	assert.Equal(t, expectedRetry, *session.LastNextDelayRetry)
+	assert.Equal(t, expectedBody, *session.LastBodySent)
 }

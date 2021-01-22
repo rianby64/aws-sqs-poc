@@ -12,26 +12,37 @@ import (
 
 // handleMessage - Performs work on a message with configured timeout.
 func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) {
-	timeoutSeconds := q.TimeoutSeconds
-	if timeoutSeconds == 0 {
-		timeoutSeconds = timeoutSecondsDefault
-	}
-
-	releaseWait := make(chan bool, 1)
 	params := sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(q.URL),
 		ReceiptHandle: m.ReceiptHandle,
 	}
+	releaseWait := make(chan bool, 1)
+	timeoutSeconds := q.TimeoutSeconds
+
+	if timeoutSeconds == 0 {
+		timeoutSeconds = timeoutSecondsDefault
+	}
 
 	go func() {
 		if _, err = q.SQS.DeleteMessage(&params); err != nil {
-			log.Errorf("deleting message from queue: %v", err)
-			releaseWait <- true
+			releaseWait <- true // this is... a thing
+
+			/*
+				Let's consider the case when deletion returns with error...
+				this means that probably the message is still in the queue,
+				so in another round it will be processed.
+			*/
 
 			return
 		}
 
 		releaseWait <- true
+
+		/*
+			What about if the message was deleted? Then the handler takes the
+			responsability to process the message and if it returns an error
+			then resend it. Any further error only can be logged.
+		*/
 
 		if err := fn(aws.StringValue(m.Body)); err != nil {
 			log.Errorf("running handler error: %v", err)
@@ -39,6 +50,11 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 			if err := q.resendMessage(m); err != nil {
 				log.Errorf("resending messange to queue: %v", err)
 			}
+
+			/*
+				In conclusion. If you put releaseWait at the end of this
+				function, surely it may end up in flooding the queue
+			*/
 		}
 	}()
 
