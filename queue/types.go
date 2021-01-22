@@ -30,7 +30,7 @@ type queueSQS struct {
 	SQS                      mySQSSession
 	URL                      string
 	TimeoutSeconds           int
-	NextDelayIncreaseSeconds int
+	NextDelayIncreaseSeconds int64
 }
 
 // MessageHandler eje!!

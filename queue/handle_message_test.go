@@ -190,14 +190,15 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 func Test_resendMessage_OK(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	queue := queueSQS{
-		SQS:            session,
-		URL:            "",
-		TimeoutSeconds: 1,
+		SQS:                      session,
+		URL:                      "",
+		TimeoutSeconds:           1,
+		NextDelayIncreaseSeconds: 3,
 	}
 
-	currentRetry := 10
+	currentRetry := int64(10)
 	expectedBody := "something to send"
-	expectedRetry := fmt.Sprintf("%d", currentRetry+queue.TimeoutSeconds)
+	expectedRetry := fmt.Sprintf("%d", currentRetry+queue.NextDelayIncreaseSeconds)
 
 	msg := sqs.Message{}
 	msg.Body = aws.String(expectedBody)

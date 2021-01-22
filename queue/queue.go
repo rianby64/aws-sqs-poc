@@ -11,7 +11,11 @@ import (
 
 // Put sends something to the queue
 func (q *queueSQS) Put(msg string, delaySeconds int64) error {
-	nextDelay := delaySeconds + nextDelayIncreaseSecondsDefault
+	if q.NextDelayIncreaseSeconds == 0 {
+		q.NextDelayIncreaseSeconds = nextDelayIncreaseSecondsDefault
+	}
+
+	nextDelay := delaySeconds + q.NextDelayIncreaseSeconds
 	messageAttributes := map[string]*sqs.MessageAttributeValue{
 		"NextDelayRetry": {
 			DataType:    aws.String("Number"),
@@ -36,9 +40,10 @@ func (q *queueSQS) Put(msg string, delaySeconds int64) error {
 // NewSQSQueue jajaja
 func NewSQSQueue(sqssession mySQSSession, handler MessageHandler) SQSQueue {
 	queue := queueSQS{
-		SQS:            sqssession,
-		URL:            "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test",
-		TimeoutSeconds: 1,
+		SQS:                      sqssession,
+		URL:                      "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test",
+		TimeoutSeconds:           timeoutSecondsDefault,
+		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 	}
 
 	go func() {
