@@ -16,6 +16,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 	if timeoutSeconds == 0 {
 		timeoutSeconds = timeoutSecondsDefault
 	}
+
 	releaseWait := make(chan bool, 1)
 	params := sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(q.URL),
@@ -46,7 +47,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 		log.Info("Processed message from queue")
 		return err
 	case <-time.After(time.Second * time.Duration(timeoutSeconds)):
-		return errors.New("Timeout processing message from queue")
+		return ErrorDeleteMessageTimeout
 	}
 }
 

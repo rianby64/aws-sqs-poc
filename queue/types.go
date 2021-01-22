@@ -2,6 +2,7 @@ package queue
 
 import (
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.ol.epicgames.net/cloud-eng/shithappens/server/lib/errors"
 )
 
 const (
@@ -10,6 +11,11 @@ const (
 	nextDelayIncreaseSeconds = 1
 	retrySecondsToListen     = 5
 	timeoutSecondsDefault    = 5
+)
+
+// These are the error definitions
+var (
+	ErrorDeleteMessageTimeout = errors.New("Timeout processing message from queue")
 )
 
 // mySQSSession jajaja

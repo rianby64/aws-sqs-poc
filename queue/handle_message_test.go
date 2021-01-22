@@ -3,6 +3,7 @@ package queue
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -15,6 +16,7 @@ type Mock4handleMessageAWSSession struct {
 	Receipt                  string
 	ShouldDeleteMessageFail  bool
 	DeleteMessageFailError   string
+	DeleteMessageTimeout     int64
 }
 
 func (a *Mock4handleMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
@@ -29,6 +31,10 @@ func (a *Mock4handleMessageAWSSession) ReceiveMessage(input *sqs.ReceiveMessageI
 func (a *Mock4handleMessageAWSSession) DeleteMessage(input *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
 	a.TimesCalledDeleteMessage++
 	a.Receipt = *input.ReceiptHandle
+
+	if a.DeleteMessageTimeout > 0 {
+		time.Sleep(time.Duration(a.DeleteMessageTimeout) * time.Second)
+	}
 
 	if a.ShouldDeleteMessageFail {
 		return nil, errors.New(a.DeleteMessageFailError)
@@ -137,6 +143,40 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, session.DeleteMessageFailError, err.Error())
 
+	assert.Equal(t, 1, session.TimesCalledDeleteMessage)
+	assert.Equal(t, 0, session.TimesCalledSendMessage)
+	assert.Equal(t, expectedReceipt, session.Receipt)
+}
+
+/*
+	Case 4: The handler receives a hander-function and a message.
+	First it tries to delete it, but it fails. Then returns an error
+*/
+func Test_handleMessage_deletion_timeout(t *testing.T) {
+	session := &Mock4handleMessageAWSSession{
+		DeleteMessageTimeout: 2,
+	}
+
+	expectedReceipt := "a receipt handle"
+	expectedMessage := "a message" // it's not important, but it's OK to define it
+
+	handler := func(msg string) error {
+		return nil
+	}
+
+	queue := queueSQS{
+		SQS:            session,
+		URL:            "",
+		TimeoutSeconds: 1,
+	}
+
+	msg := sqs.Message{}
+	msg.Body = aws.String(expectedMessage)
+	msg.ReceiptHandle = aws.String(expectedReceipt)
+	err := queue.handleMessage(handler, &msg)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrorDeleteMessageTimeout, err)
 	assert.Equal(t, 1, session.TimesCalledDeleteMessage)
 	assert.Equal(t, 0, session.TimesCalledSendMessage)
 	assert.Equal(t, expectedReceipt, session.Receipt)
