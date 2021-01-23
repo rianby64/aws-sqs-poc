@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/stretchr/testify/assert"
 )
 
 type MockAWSSession1 struct {
@@ -46,20 +47,18 @@ func (a *MockAWSSession1) DeleteMessage(input *sqs.DeleteMessageInput) (*sqs.Del
 }
 
 func Test_Put_once_and_Handle(t *testing.T) {
-	/*
-		finish := make(chan bool)
-		expected := "my string"
+	finish := make(chan bool)
+	expected := "my string"
 
-		handlerMock1 := func(msg string) error {
-			assert.Equal(t, expected, msg)
-			finish <- true
-			return nil
-		}
+	handlerMock1 := func(msg string) error {
+		assert.Equal(t, expected, msg)
+		finish <- true
+		return nil
+	}
 
-		mysession := MockAWSSession1{}
-		queue := NewSQSQueue(&mysession, handlerMock1)
-		queue.Put(expected, 0)
+	mysession := MockAWSSession1{}
+	queue := NewSQSQueue(&mysession, handlerMock1)
+	queue.Put(expected, 0)
 
-		<-finish
-	*/
+	<-finish
 }
