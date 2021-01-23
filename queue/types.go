@@ -2,7 +2,7 @@ package queue
 
 import (
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.ol.epicgames.net/cloud-eng/shithappens/server/lib/errors"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -31,6 +31,7 @@ type queueSQS struct {
 	URL                      string
 	TimeoutSeconds           int
 	NextDelayIncreaseSeconds int64
+	handlerMap               map[string]MessageHandler
 }
 
 // MessageHandler eje!!
@@ -39,4 +40,5 @@ type MessageHandler func(msg string) error
 // SQSQueue ajajaja
 type SQSQueue interface {
 	Put(msg string, delaySeconds int64) error
+	Register(name string, method MessageHandler)
 }

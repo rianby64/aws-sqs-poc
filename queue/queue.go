@@ -37,6 +37,11 @@ func (q *queueSQS) Put(msg string, delaySeconds int64) error {
 	return nil
 }
 
+// Register
+func (q *queueSQS) Register(name string, method MessageHandler) {
+
+}
+
 // NewSQSQueue jajaja
 func NewSQSQueue(sqssession mySQSSession, handler MessageHandler) SQSQueue {
 	queue := queueSQS{
@@ -44,6 +49,7 @@ func NewSQSQueue(sqssession mySQSSession, handler MessageHandler) SQSQueue {
 		URL:                      "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test",
 		TimeoutSeconds:           timeoutSecondsDefault,
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
+		handlerMap:               map[string]MessageHandler{},
 	}
 
 	go func() {
