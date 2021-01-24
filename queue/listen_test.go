@@ -185,3 +185,31 @@ func Test_matchHandler_match_named_handler(t *testing.T) {
 	assert.Nil(t, handler(""))
 	assert.True(t, true, called)
 }
+
+/*
+	Case 6: listen fails because of matchHandler error
+*/
+func Test_listen_matchHandler_err(t *testing.T) {
+	msg := &sqs.Message{}
+	msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		"Method": {
+			DataType:    aws.String("string"),
+			StringValue: aws.String("unmatchable_method"),
+		},
+	}
+	session := &Mock4ReceiveMessageAWSSession{
+		ReceiveMessageResponses: []*sqs.Message{msg},
+	}
+
+	session.Waiter.Add(1)
+
+	queue := queueSQS{
+		SQS: session,
+	}
+
+	err := queue.listen()
+	session.Waiter.Wait()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrorHandlerNotFound, err)
+}
