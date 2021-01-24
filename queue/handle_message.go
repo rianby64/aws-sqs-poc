@@ -80,5 +80,5 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 		}
 	}
 
-	return q.Put(*m.Body, delayRetry)
+	return q.PutString("", *m.Body, delayRetry)
 }

@@ -1,16 +1,18 @@
 package queue
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-// Put sends something to the queue
-func (q *queueSQS) Put(msg string, delaySeconds int64) error {
+// PutString sends an string to the queue
+func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
 	if q.NextDelayIncreaseSeconds == 0 {
 		q.NextDelayIncreaseSeconds = nextDelayIncreaseSecondsDefault
 	}
@@ -20,6 +22,10 @@ func (q *queueSQS) Put(msg string, delaySeconds int64) error {
 		"NextDelayRetry": {
 			DataType:    aws.String("Number"),
 			StringValue: aws.String(fmt.Sprintf("%d", nextDelay)),
+		},
+		"Method": {
+			DataType:    aws.String("string"),
+			StringValue: aws.String(method),
 		},
 	}
 
@@ -37,6 +43,16 @@ func (q *queueSQS) Put(msg string, delaySeconds int64) error {
 	return nil
 }
 
+// PutString sends a JSON to the queue
+func (q *queueSQS) PutJSON(method string, msg interface{}, delaySeconds int64) error {
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return errors.Wrap(err, "PutJSON error")
+	}
+
+	return q.PutString(method, string(msgBytes), delaySeconds)
+}
+
 // Register
 func (q *queueSQS) Register(name string, method MessageHandler) {
 	if q.handlerMap == nil {
@@ -47,7 +63,7 @@ func (q *queueSQS) Register(name string, method MessageHandler) {
 }
 
 // NewSQSQueue jajaja
-func NewSQSQueue(sqssession mySQSSession, URL string) SQSQueue {
+func NewSQSQueue(sqssession iSQSSession, URL string) SQSQueue {
 	queue := queueSQS{
 		SQS:                      sqssession,
 		URL:                      URL,

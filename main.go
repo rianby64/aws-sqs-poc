@@ -80,7 +80,7 @@ func main() {
 
 	toSend := string(optionsJSON)
 
-	if err := myq.Put(toSend, 0); err != nil {
+	if err := myq.PutString("", toSend, 0); err != nil {
 		fmt.Println(err)
 	}
 
