@@ -50,10 +50,13 @@ func Test_listen_calls_ReceiveMessage(t *testing.T) {
 	}
 
 	queue := queueSQS{
-		SQS: session,
+		SQS:        session,
+		handlerMap: map[string]MessageHandler{},
 	}
 
-	go queue.listen(handler)
+	queue.Register("", handler)
+
+	go queue.listen()
 	session.Waiter.Wait()
 
 	assert.True(t, session.CalledReceiveMessage)
@@ -88,10 +91,13 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	}
 
 	queue := queueSQS{
-		SQS: session,
+		SQS:        session,
+		handlerMap: map[string]MessageHandler{},
 	}
 
-	go queue.listen(handler)
+	queue.Register("", handler)
+
+	go queue.listen()
 	session.Waiter.Wait()
 
 	assert.True(t, session.CalledReceiveMessage)

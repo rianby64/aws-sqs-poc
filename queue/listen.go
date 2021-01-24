@@ -8,7 +8,7 @@ import (
 )
 
 // listen - A worker loop that reads and processes queue messages.
-func (q *queueSQS) listen(fn MessageHandler) error {
+func (q *queueSQS) listen() error {
 	params := sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(q.URL),
 		MaxNumberOfMessages: aws.Int64(maxNumberOfMessages),
@@ -28,8 +28,10 @@ func (q *queueSQS) listen(fn MessageHandler) error {
 
 		if len(resp.Messages) > 0 {
 			for _, msg := range resp.Messages {
-				if err := q.handleMessage(fn, msg); err != nil {
-					log.Errorf("handling queue message: %v", err)
+				for _, handler := range q.handlerMap {
+					if err := q.handleMessage(handler, msg); err != nil {
+						log.Errorf("handling queue message: %v", err)
+					}
 				}
 			}
 		}

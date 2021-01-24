@@ -57,7 +57,9 @@ func Test_Put_once_and_Handle(t *testing.T) {
 	}
 
 	mysession := MockAWSSession1{}
-	queue := NewSQSQueue(&mysession, handlerMock1)
+	queue := NewSQSQueue(&mysession)
+
+	queue.Register("", handlerMock1)
 	queue.Put(expected, 0)
 
 	<-finish

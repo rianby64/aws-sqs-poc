@@ -66,7 +66,8 @@ func main() {
 
 	awssession, _ := NewAWSSession()
 	sqssession := sqs.New(awssession)
-	myq := queue.NewSQSQueue(sqssession, myhandler)
+	myq := queue.NewSQSQueue(sqssession)
+	myq.Register("", myhandler)
 
 	channelID := "C01JG8ALHHV"
 	msg := "This is my message to send ogo ogo ogo"
