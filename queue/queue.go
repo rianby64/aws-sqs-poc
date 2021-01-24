@@ -39,6 +39,10 @@ func (q *queueSQS) Put(msg string, delaySeconds int64) error {
 
 // Register
 func (q *queueSQS) Register(name string, method MessageHandler) {
+	if q.handlerMap == nil {
+		q.handlerMap = map[string]MessageHandler{}
+	}
+
 	q.handlerMap[name] = method
 }
 

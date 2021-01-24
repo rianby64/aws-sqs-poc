@@ -16,6 +16,7 @@ type Mock4ReceiveMessageAWSSession struct {
 	Waiter                  sync.WaitGroup
 	ReceiveMessageResponses []*sqs.Message
 	ReceiveMessageError     error
+	DeleteMessageError      error
 }
 
 func (a *Mock4ReceiveMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
@@ -35,7 +36,7 @@ func (a *Mock4ReceiveMessageAWSSession) ReceiveMessage(input *sqs.ReceiveMessage
 }
 
 func (a *Mock4ReceiveMessageAWSSession) DeleteMessage(input *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
-	return nil, nil
+	return nil, a.DeleteMessageError
 }
 
 /*
@@ -212,4 +213,29 @@ func Test_listen_matchHandler_err(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorHandlerNotFound, err)
+}
+
+/*
+	Case 7: listen fails because of handleMessage by DeleteMessage error
+*/
+func Test_listen_handleMessage_err(t *testing.T) {
+	session := &Mock4ReceiveMessageAWSSession{
+		ReceiveMessageResponses: []*sqs.Message{{}},
+		DeleteMessageError:      errors.New("intentional error"),
+	}
+
+	session.Waiter.Add(1)
+
+	queue := queueSQS{
+		SQS: session,
+	}
+	queue.Register("", func(msg string) error {
+		return nil
+	})
+
+	err := queue.listen()
+	session.Waiter.Wait()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "handling queue message: intentional error", err.Error())
 }

@@ -35,7 +35,7 @@ func (q *queueSQS) listen() error {
 				}
 
 				if err := q.handleMessage(handler, msg); err != nil {
-					log.Errorf("handling queue message: %v", err)
+					return errors.Wrap(err, "handling queue message")
 				}
 			}
 		}
