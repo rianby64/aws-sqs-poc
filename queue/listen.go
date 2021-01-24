@@ -28,22 +28,31 @@ func (q *queueSQS) listen() error {
 
 		if len(resp.Messages) > 0 {
 			for _, msg := range resp.Messages {
-				methodName := ""
-				messageAttributes := msg.MessageAttributes
-
-				if methodNameAttr, ok := messageAttributes["Method"]; ok {
-					methodName = methodNameAttr.String()
+				handler, err := q.matchHandler(msg)
+				if err != nil {
+					return err
 				}
 
-				if handler, ok := q.handlerMap[methodName]; ok {
-					if err := q.handleMessage(handler, msg); err != nil {
-						log.Errorf("handling queue message: %v", err)
-					}
-				} else {
-					return ErrorHandlerNotFound
+				if err := q.handleMessage(handler, msg); err != nil {
+					log.Errorf("handling queue message: %v", err)
 				}
 			}
 		}
 
 	}
+}
+
+func (q *queueSQS) matchHandler(msg *sqs.Message) (MessageHandler, error) {
+	methodName := ""
+	messageAttributes := msg.MessageAttributes
+
+	if methodNameAttr, ok := messageAttributes["Method"]; ok {
+		methodName = methodNameAttr.String()
+	}
+
+	if handler, ok := q.handlerMap[methodName]; ok {
+		return handler, nil
+	}
+
+	return nil, ErrorHandlerNotFound
 }
