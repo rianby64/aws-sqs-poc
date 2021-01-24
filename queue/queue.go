@@ -43,10 +43,10 @@ func (q *queueSQS) Register(name string, method MessageHandler) {
 }
 
 // NewSQSQueue jajaja
-func NewSQSQueue(sqssession mySQSSession) SQSQueue {
+func NewSQSQueue(sqssession mySQSSession, URL string) SQSQueue {
 	queue := queueSQS{
 		SQS:                      sqssession,
-		URL:                      "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test",
+		URL:                      URL,
 		TimeoutSeconds:           timeoutSecondsDefault,
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 		handlerMap:               map[string]MessageHandler{},

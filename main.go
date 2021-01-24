@@ -66,7 +66,7 @@ func main() {
 
 	awssession, _ := NewAWSSession()
 	sqssession := sqs.New(awssession)
-	myq := queue.NewSQSQueue(sqssession)
+	myq := queue.NewSQSQueue(sqssession, "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test")
 	myq.Register("", myhandler)
 
 	channelID := "C01JG8ALHHV"
