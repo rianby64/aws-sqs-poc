@@ -60,7 +60,9 @@ func Test_Put_once_and_Handle(t *testing.T) {
 	queue := NewSQSQueue(&mysession, "")
 
 	queue.Register("", handlerMock1)
-	queue.Put(expected, 0)
+	if err := queue.Put(expected, 0); err != nil {
+		t.Error(err)
+	}
 
 	<-finish
 }

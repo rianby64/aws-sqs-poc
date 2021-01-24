@@ -58,7 +58,12 @@ func Test_listen_calls_ReceiveMessage(t *testing.T) {
 
 	queue.Register("", handler)
 
-	go queue.listen()
+	go func() {
+		if err := queue.listen(); err != nil {
+			t.Error(err)
+		}
+	}()
+
 	session.Waiter.Wait()
 
 	assert.True(t, session.CalledReceiveMessage)
@@ -99,7 +104,12 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 
 	queue.Register("", handler)
 
-	go queue.listen()
+	go func() {
+		if err := queue.listen(); err != nil {
+			t.Error(err)
+		}
+	}()
+
 	session.Waiter.Wait()
 
 	assert.True(t, session.CalledReceiveMessage)

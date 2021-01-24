@@ -58,10 +58,10 @@ func main() {
 		}
 
 		options := slack.MsgOptionText(params.MsgOptionText.Text, params.MsgOptionText.Escape)
-		slackClient.PostMessage(params.ChannelID, options)
+		_, _, err := slackClient.PostMessage(params.ChannelID, options)
 		i++
 		fmt.Println("Sending the message", options, slackClient, i)
-		return nil //errors.New("this is the error")
+		return err //errors.New("this is the error")
 	}
 
 	awssession, _ := NewAWSSession()
@@ -79,7 +79,10 @@ func main() {
 
 	toSend := string(optionsJSON)
 
-	myq.Put(toSend, 0)
+	if err := myq.Put(toSend, 0); err != nil {
+		fmt.Println(err)
+	}
+
 	fmt.Println(channelID)
 	time.Sleep(5 * time.Hour)
 

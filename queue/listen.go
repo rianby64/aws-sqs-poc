@@ -28,10 +28,19 @@ func (q *queueSQS) listen() error {
 
 		if len(resp.Messages) > 0 {
 			for _, msg := range resp.Messages {
-				for _, handler := range q.handlerMap {
+				methodName := ""
+				messageAttributes := msg.MessageAttributes
+
+				if methodNameAttr, ok := messageAttributes["Method"]; ok {
+					methodName = methodNameAttr.String()
+				}
+
+				if handler, ok := q.handlerMap[methodName]; ok {
 					if err := q.handleMessage(handler, msg); err != nil {
 						log.Errorf("handling queue message: %v", err)
 					}
+				} else {
+					return ErrorHandlerNotFound
 				}
 			}
 		}

@@ -16,6 +16,7 @@ const (
 // These are the error definitions
 var (
 	ErrorDeleteMessageTimeout = errors.New("Timeout processing message from queue")
+	ErrorHandlerNotFound      = errors.New("Handler not found in the register map")
 )
 
 // mySQSSession jajaja
