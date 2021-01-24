@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,6 +15,7 @@ type Mock4ReceiveMessageAWSSession struct {
 	Locker                  sync.Mutex
 	Waiter                  sync.WaitGroup
 	ReceiveMessageResponses []*sqs.Message
+	ReceiveMessageError     error
 }
 
 func (a *Mock4ReceiveMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
@@ -29,7 +31,7 @@ func (a *Mock4ReceiveMessageAWSSession) ReceiveMessage(input *sqs.ReceiveMessage
 		Messages: a.ReceiveMessageResponses,
 	}
 
-	return &response, nil
+	return &response, a.ReceiveMessageError
 }
 
 func (a *Mock4ReceiveMessageAWSSession) DeleteMessage(input *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
@@ -63,7 +65,7 @@ func Test_listen_calls_ReceiveMessage(t *testing.T) {
 }
 
 /*
-	Case 1: queue.listen(handler) calls ReceiveMessage at least once
+	Case 2: queue.listen(handler) calls ReceiveMessage at least once
 */
 func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	msg1 := "message 1"
@@ -102,4 +104,26 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 
 	assert.True(t, session.CalledReceiveMessage)
 	assert.Equal(t, 2, i)
+}
+
+/*
+	Case 3: queue.listen(handler) ReceiveMessage returns an error, so listens returns it too
+*/
+func Test_listen_calls_ReceiveMessage_error_listen_error_too(t *testing.T) {
+	session := &Mock4ReceiveMessageAWSSession{
+		ReceiveMessageResponses: []*sqs.Message{},
+		ReceiveMessageError:     errors.New("an intentional error"),
+	}
+	session.Waiter.Add(1)
+
+	queue := queueSQS{
+		SQS:        session,
+		handlerMap: map[string]MessageHandler{},
+	}
+
+	err := queue.listen()
+	session.Waiter.Wait()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "SQS.ReceiveMessage error: an intentional error", err.Error())
 }
