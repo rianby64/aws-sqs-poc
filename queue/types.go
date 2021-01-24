@@ -38,6 +38,10 @@ type queueSQS struct {
 // MessageHandler receives from the queue the message. Use Register to define the handler
 type MessageHandler func(msg interface{}) error
 
+type msgJSON struct {
+	Msg interface{} `json:"msg"`
+}
+
 // SQSQueue defines the special SQS-Queue that accepts handlers via Register
 type SQSQueue interface {
 	PutString(method, msg string, delaySeconds int64) error

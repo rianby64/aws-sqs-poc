@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -44,7 +45,8 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 			then resend it. Any further error only can be logged.
 		*/
 
-		if err := fn(aws.StringValue(m.Body)); err != nil {
+		msg := q.unmarshal(aws.StringValue(m.Body))
+		if err := fn(msg); err != nil {
 			log.Errorf("running handler error: %v", err)
 
 			if err := q.resendMessage(m); err != nil {
@@ -65,6 +67,17 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 	case <-time.After(time.Second * time.Duration(timeoutSeconds)):
 		return ErrorDeleteMessageTimeout
 	}
+}
+
+func (q *queueSQS) unmarshal(body string) interface{} {
+	msg := msgJSON{}
+	bytesMsg := []byte(body)
+
+	if err := json.Unmarshal(bytesMsg, &msg); err != nil {
+		return body
+	}
+
+	return msg.Msg
 }
 
 func (q *queueSQS) resendMessage(m *sqs.Message) error {

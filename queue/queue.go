@@ -45,7 +45,10 @@ func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
 
 // PutString sends a JSON to the queue
 func (q *queueSQS) PutJSON(method string, msg interface{}, delaySeconds int64) error {
-	msgBytes, err := json.Marshal(msg)
+	msgBytes, err := json.Marshal(msgJSON{
+		Msg: msg,
+	})
+
 	if err != nil {
 		return errors.Wrap(err, "PutJSON error")
 	}
