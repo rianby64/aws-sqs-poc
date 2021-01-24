@@ -10,7 +10,7 @@ const (
 	waitTimeSeconds                 = 10
 	retrySecondsToListen            = 5
 	timeoutSecondsDefault           = 5
-	nextDelayIncreaseSecondsDefault = 1 /// TODO: use this variable correctly
+	nextDelayIncreaseSecondsDefault = 1
 )
 
 // These are the error definitions
