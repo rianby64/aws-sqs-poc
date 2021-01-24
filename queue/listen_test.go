@@ -153,3 +153,35 @@ func Test_matchHandler_not_found(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrorHandlerNotFound, err)
 }
+
+/*
+	Case 5: queue.matchHandler matches one named handler
+*/
+func Test_matchHandler_match_named_handler(t *testing.T) {
+	method := "named_handler"
+	called := false
+	namedHandler := func(msg string) error {
+		called = true
+		return nil
+	}
+
+	queue := queueSQS{
+		handlerMap: map[string]MessageHandler{
+			method: namedHandler,
+		},
+	}
+
+	msg := &sqs.Message{}
+	msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		"Method": {
+			DataType:    aws.String("string"),
+			StringValue: aws.String(method),
+		},
+	}
+	handler, err := queue.matchHandler(msg)
+
+	assert.NotNil(t, handler)
+	assert.Nil(t, err)
+	assert.Nil(t, handler(""))
+	assert.True(t, true, called)
+}

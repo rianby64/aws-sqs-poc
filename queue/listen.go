@@ -47,7 +47,7 @@ func (q *queueSQS) matchHandler(msg *sqs.Message) (MessageHandler, error) {
 	messageAttributes := msg.MessageAttributes
 
 	if methodNameAttr, ok := messageAttributes["Method"]; ok {
-		methodName = methodNameAttr.String()
+		methodName = *methodNameAttr.StringValue
 	}
 
 	if handler, ok := q.handlerMap[methodName]; ok {
