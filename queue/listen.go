@@ -19,6 +19,7 @@ func (q *queueSQS) listen() error {
 	}
 
 	log.Info("Starting the listen process")
+
 	for {
 		resp, err := q.SQS.ReceiveMessage(&params)
 
@@ -38,7 +39,6 @@ func (q *queueSQS) listen() error {
 				}
 			}
 		}
-
 	}
 }
 

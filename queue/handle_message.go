@@ -70,14 +70,14 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 func (q *queueSQS) resendMessage(m *sqs.Message) error {
 	delayRetry := int64(0)
 	messageAttributes := m.MessageAttributes
+
 	if delayRetryAttr, ok := messageAttributes["NextDelayRetry"]; ok && delayRetryAttr.StringValue != nil {
 		delayRetryValue, err := strconv.ParseInt(*delayRetryAttr.StringValue, 10, 64)
+		delayRetry = delayRetryValue
 
 		if err != nil {
 			return errors.Wrap(err, "Incorrect value of NextDelayRetry")
 		}
-
-		delayRetry = delayRetryValue
 	}
 
 	return q.Put(*m.Body, delayRetry)

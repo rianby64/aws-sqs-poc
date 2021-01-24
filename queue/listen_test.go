@@ -137,3 +137,19 @@ func Test_listen_calls_ReceiveMessage_error_listen_error_too(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, "SQS.ReceiveMessage error: an intentional error", err.Error())
 }
+
+/*
+	Case 4: queue.matchHandler matches nothing
+*/
+func Test_matchHandler_not_found(t *testing.T) {
+	queue := queueSQS{
+		handlerMap: map[string]MessageHandler{},
+	}
+
+	msg := &sqs.Message{}
+	handler, err := queue.matchHandler(msg)
+
+	assert.Nil(t, handler)
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrorHandlerNotFound, err)
+}
