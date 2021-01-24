@@ -36,7 +36,7 @@ type queueSQS struct {
 }
 
 // MessageHandler eje!!
-type MessageHandler func(msg string) error
+type MessageHandler func(msg interface{}) error
 
 // SQSQueue ajajaja
 type SQSQueue interface {

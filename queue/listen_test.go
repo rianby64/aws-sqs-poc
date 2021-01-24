@@ -48,7 +48,7 @@ func Test_listen_calls_ReceiveMessage(t *testing.T) {
 	}
 	session.Waiter.Add(1) // wait for the call of ReceiveMessage
 
-	handler := func(str string) error {
+	handler := func(str interface{}) error {
 		return nil
 	}
 
@@ -89,7 +89,7 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	session.Waiter.Add(3) // wait for the call of ReceiveMessage and the handler twice
 
 	i := 0
-	handler := func(str string) error {
+	handler := func(str interface{}) error {
 		if msg1 == str || msg2 == str {
 			i++
 			session.Waiter.Done()
@@ -161,7 +161,7 @@ func Test_matchHandler_not_found(t *testing.T) {
 func Test_matchHandler_match_named_handler(t *testing.T) {
 	method := "named_handler"
 	called := false
-	namedHandler := func(msg string) error {
+	namedHandler := func(msg interface{}) error {
 		called = true
 		return nil
 	}
@@ -229,7 +229,7 @@ func Test_listen_handleMessage_err(t *testing.T) {
 	queue := queueSQS{
 		SQS: session,
 	}
-	queue.Register("", func(msg string) error {
+	queue.Register("", func(msg interface{}) error {
 		return nil
 	})
 

@@ -58,7 +58,7 @@ func Test_handleMessage_once(t *testing.T) {
 	expectedReceipt := "a receipt handle"
 	expectedMessage := "a message"
 
-	handler := func(msg string) error {
+	handler := func(msg interface{}) error {
 		finish <- true
 		assert.Equal(t, expectedMessage, msg)
 		return nil
@@ -92,7 +92,7 @@ func Test_handleMessage_resend(t *testing.T) {
 	expectedReceipt := "a receipt handle"
 	expectedMessage := "a message"
 
-	handler := func(msg string) error {
+	handler := func(msg interface{}) error {
 		go func() {
 			finish <- true
 		}()
@@ -131,7 +131,7 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 	expectedReceipt := "a receipt handle"
 	expectedMessage := "a message" // it's not important, but it's OK to define it
 
-	handler := func(msg string) error {
+	handler := func(msg interface{}) error {
 		return nil
 	}
 
@@ -165,7 +165,7 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 	expectedReceipt := "a receipt handle"
 	expectedMessage := "a message" // it's not important, but it's OK to define it
 
-	handler := func(msg string) error {
+	handler := func(msg interface{}) error {
 		return nil
 	}
 

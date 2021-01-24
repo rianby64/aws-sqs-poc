@@ -50,7 +50,7 @@ func Test_Put_once_and_Handle(t *testing.T) {
 	finish := make(chan bool)
 	expected := "my string"
 
-	handlerMock1 := func(msg string) error {
+	handlerMock1 := func(msg interface{}) error {
 		assert.Equal(t, expected, msg)
 		finish <- true
 		return nil

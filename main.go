@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -51,10 +52,10 @@ func main() {
 	slackClient := slack.New("--")
 
 	i := 0
-	myhandler := func(msg string) error {
-		params := PostMessageArgs{}
-		if err := json.Unmarshal([]byte(msg), &params); err != nil {
-			fmt.Println(err, "this is an error")
+	myhandler := func(msg interface{}) error {
+		params, ok := msg.(PostMessageArgs)
+		if !ok {
+			return errors.New("cannot cast msg into PostMessageArgs")
 		}
 
 		options := slack.MsgOptionText(params.MsgOptionText.Text, params.MsgOptionText.Escape)
