@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:6cc07af061b6e30b2241a9938df49f252e0747271a043bf4452de650e399168c"
+  digest = "1:9abdcca68b69a708f408355d26a492194c1a5577553bd9e7bb2e132ade470809"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -10,37 +10,24 @@
     "aws/awsutil",
     "aws/client",
     "aws/client/metadata",
-    "aws/corehandlers",
     "aws/credentials",
-    "aws/credentials/ec2rolecreds",
-    "aws/credentials/endpointcreds",
-    "aws/credentials/processcreds",
-    "aws/credentials/stscreds",
-    "aws/csm",
-    "aws/defaults",
-    "aws/ec2metadata",
     "aws/endpoints",
     "aws/request",
-    "aws/session",
     "aws/signer/v4",
     "internal/context",
     "internal/ini",
     "internal/sdkio",
     "internal/sdkmath",
     "internal/sdkrand",
-    "internal/sdkuri",
     "internal/shareddefaults",
     "internal/strings",
     "internal/sync/singleflight",
     "private/protocol",
-    "private/protocol/json/jsonutil",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
     "service/sqs",
-    "service/sts",
-    "service/sts/stsiface",
   ]
   pruneopts = "UT"
   revision = "a07292d851679b1c7cbbb2745aa64f02ac50136a"
@@ -53,14 +40,6 @@
   pruneopts = "UT"
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
-
-[[projects]]
-  digest = "1:6d29f02f0f01c627c2be40fb7347669a9ff2aa215cb97747294c1d13ffa74bdd"
-  name = "github.com/gorilla/websocket"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b65e62901fc1c0d968042419e74789f6af455eb9"
-  version = "v1.4.2"
 
 [[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
@@ -92,21 +71,6 @@
   pruneopts = "UT"
   revision = "6699a89a232f3db797f2e280639854bbc4b89725"
   version = "v1.7.0"
-
-[[projects]]
-  digest = "1:f0dd8f419aa7fd443c2e6b6413d6d60aa357e01449d14886abcbb17fcc143091"
-  name = "github.com/slack-go/slack"
-  packages = [
-    ".",
-    "internal/backoff",
-    "internal/errorsx",
-    "internal/misc",
-    "internal/timex",
-    "slackutilsx",
-  ]
-  pruneopts = "UT"
-  revision = "483202e6be9328efbc6994beabb93e9a749408f6"
-  version = "v0.8.0"
 
 [[projects]]
   digest = "1:edb231f4f062fe87e1cc93351e1ee06d4cebf553d1f85f9f3b9b4903df42df20"
@@ -141,12 +105,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/aws",
-    "github.com/aws/aws-sdk-go/aws/credentials",
-    "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
-    "github.com/slack-go/slack",
     "github.com/stretchr/testify/assert",
   ]
   solver-name = "gps-cdcl"
