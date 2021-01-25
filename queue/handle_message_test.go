@@ -55,8 +55,9 @@ func (a *Mock4handleMessageAWSSession) DeleteMessage(input *sqs.DeleteMessageInp
 func Test_handleMessage_once(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	finish := make(chan bool)
-	expectedReceipt := "a receipt handle"
-	expectedMessage := "a message"
+
+	const expectedReceipt = "a receipt handle"
+	const expectedMessage = "a message"
 
 	handler := func(msg interface{}) error {
 		finish <- true
@@ -89,8 +90,9 @@ func Test_handleMessage_once(t *testing.T) {
 func Test_handleMessage_resend(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	finish := make(chan bool)
-	expectedReceipt := "a receipt handle"
-	expectedMessage := "a message"
+
+	const expectedReceipt = "a receipt handle"
+	const expectedMessage = "a message"
 
 	handler := func(msg interface{}) error {
 		go func() {
@@ -128,8 +130,8 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 		DeleteMessageFailError:  "an intentional error",
 	}
 
-	expectedReceipt := "a receipt handle"
-	expectedMessage := "a message" // it's not important, but it's OK to define it
+	const expectedReceipt = "a receipt handle"
+	const expectedMessage = "a message" // it's not important, but it's OK to define it
 
 	handler := func(msg interface{}) error {
 		return nil
@@ -162,8 +164,8 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 		DeleteMessageTimeout: 2,
 	}
 
-	expectedReceipt := "a receipt handle"
-	expectedMessage := "a message" // it's not important, but it's OK to define it
+	const expectedReceipt = "a receipt handle"
+	const expectedMessage = "a message" // it's not important, but it's OK to define it
 
 	handler := func(msg interface{}) error {
 		return nil
@@ -197,7 +199,7 @@ func Test_resendMessage_OK(t *testing.T) {
 	}
 
 	currentRetry := int64(10)
-	expectedBody := "something to send"
+	const expectedBody = "something to send"
 	expectedRetry := fmt.Sprintf("%d", currentRetry+queue.NextDelayIncreaseSeconds)
 
 	msg := sqs.Message{}

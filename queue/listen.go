@@ -4,6 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
+
+	// nolint: depguard
 	log "github.com/sirupsen/logrus"
 )
 

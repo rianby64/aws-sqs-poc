@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
+
+	// nolint: depguard
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,10 +68,10 @@ func (q *queueSQS) Register(name string, method MessageHandler) {
 }
 
 // NewSQSQueue jajaja
-func NewSQSQueue(sqssession iSQSSession, URL string) SQSQueue {
+func NewSQSQueue(sqssession iSQSSession, url string) SQSQueue {
 	queue := queueSQS{
 		SQS:                      sqssession,
-		URL:                      URL,
+		URL:                      url,
 		TimeoutSeconds:           timeoutSecondsDefault,
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 		handlerMap:               map[string]MessageHandler{},

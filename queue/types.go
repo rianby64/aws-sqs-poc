@@ -15,8 +15,8 @@ const (
 
 // These are the error definitions
 var (
-	ErrorDeleteMessageTimeout = errors.New("Timeout processing message from queue")
-	ErrorHandlerNotFound      = errors.New("Handler not found in the register map")
+	ErrorDeleteMessageTimeout = errors.New("timeout processing message from queue")
+	ErrorHandlerNotFound      = errors.New("handler not found in the register map")
 )
 
 // iSQSSession represents the interface to connect to a Queue

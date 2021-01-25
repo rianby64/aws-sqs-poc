@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
+
+	// nolint: depguard
 	log "github.com/sirupsen/logrus"
 )
 
@@ -41,16 +43,16 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 
 		/*
 			What about if the message was deleted? Then the handler takes the
-			responsability to process the message and if it returns an error
+			responsibility to process the message and if it returns an error
 			then resend it. Any further error only can be logged.
 		*/
 
 		msg := q.unmarshal(aws.StringValue(m.Body))
-		if err := fn(msg); err != nil {
-			log.Errorf("running handler error: %v", err)
+		if err2 := fn(msg); err2 != nil {
+			log.Errorf("running handler error: %v", err2)
 
-			if err := q.resendMessage(m); err != nil {
-				log.Errorf("resending messange to queue: %v", err)
+			if err2 := q.resendMessage(m); err2 != nil {
+				log.Errorf("resending messange to queue: %v", err2)
 			}
 
 			/*
