@@ -62,7 +62,7 @@ func main() {
 		_, _, err := slackClient.PostMessage(params.ChannelID, options)
 		i++
 		fmt.Println("Sending the message", options, slackClient, i)
-		return err //errors.New("this is the error")
+		return err
 	}
 
 	awssession, _ := NewAWSSession()
@@ -85,6 +85,5 @@ func main() {
 	}
 
 	fmt.Println(channelID)
-	time.Sleep(5 * time.Hour)
-
+	time.Sleep(time.Hour)
 }

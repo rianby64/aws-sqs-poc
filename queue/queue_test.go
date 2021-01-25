@@ -71,6 +71,8 @@ func Test_Put_once_and_Handle(t *testing.T) {
 	queue := NewSQSQueue(&mysession, "")
 
 	queue.Register("", handlerMock1)
+	go queue.Listen()
+
 	if err := queue.PutString("", expected, 0); err != nil {
 		t.Error(err)
 	}
@@ -109,6 +111,8 @@ func Test_PutJSON_once_and_Handle(t *testing.T) {
 	queue := NewSQSQueue(&mysession, "")
 
 	queue.Register("method_name", handlerMock1)
+	go queue.Listen()
+
 	if err := queue.PutJSON("method_name", expected, 0); err != nil {
 		t.Error(err)
 	}

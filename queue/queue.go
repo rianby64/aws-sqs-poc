@@ -58,13 +58,24 @@ func (q *queueSQS) PutJSON(method string, msg interface{}, delaySeconds int64) e
 	return q.PutString(method, string(msgBytes), delaySeconds)
 }
 
-// Register
+// Register method
 func (q *queueSQS) Register(name string, method MessageHandler) {
 	if q.handlerMap == nil {
 		q.handlerMap = map[string]MessageHandler{}
 	}
 
 	q.handlerMap[name] = method
+}
+
+// Listen method
+func (q *queueSQS) Listen() {
+	for {
+		if err := q.listen(); err != nil {
+			log.Error(err, "terminated, retry to listen... wait")
+		}
+
+		time.Sleep(time.Duration(retrySecondsToListen) * time.Second)
+	}
 }
 
 // NewSQSQueue jajaja
@@ -76,16 +87,6 @@ func NewSQSQueue(sqssession iSQSSession, url string) SQSQueue {
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 		handlerMap:               map[string]MessageHandler{},
 	}
-
-	go func() {
-		for {
-			if err := queue.listen(); err != nil {
-				log.Error(err, "terminated, retry to listen... wait")
-			}
-
-			time.Sleep(retrySecondsToListen * time.Second)
-		}
-	}()
 
 	return &queue
 }

@@ -47,4 +47,5 @@ type SQSQueue interface {
 	PutString(method, msg string, delaySeconds int64) error
 	PutJSON(method string, msg interface{}, delaySeconds int64) error
 	Register(name string, method MessageHandler)
+	Listen()
 }
