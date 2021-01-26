@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -296,4 +297,47 @@ func Test_handleMessage_resend_maxNumberOfRetries_reached(t *testing.T) {
 	assert.Equal(t, maxNumberOfRetries+1, session.TimesCalledDeleteMessage)
 	assert.Equal(t, maxNumberOfRetries, session.TimesCalledSendMessage)
 	assert.Equal(t, expectedReceipt, session.Receipt)
+}
+
+// This test is for educational purposes
+func Test_unmarshal_complex_thing(t *testing.T) {
+	queue := queueSQS{}
+
+	type complexObject struct {
+		Field1 *string
+		Field2 int64
+		Field3 float64
+		Field4 []string
+		Field5 struct {
+			Key    *string
+			ValueA *string
+			ValueB *float64
+		}
+	}
+
+	params := complexObject{
+		Field1: aws.String("ptr string"),
+		Field2: 1,
+		Field3: 1.0,
+		Field4: []string{"str1", "str2"},
+		Field5: struct {
+			Key    *string
+			ValueA *string
+			ValueB *float64
+		}{
+			Key:    aws.String("key1"),
+			ValueA: aws.String("value1"),
+			ValueB: aws.Float64(float64(1.0)),
+		},
+	}
+
+	paramsStr, _ := json.Marshal(msgJSON{Msg: params})
+
+	msgBody := queue.unmarshal(string(paramsStr))
+	reversed, err := json.Marshal(msgBody)
+	assert.Nil(t, err)
+
+	actual := complexObject{}
+	assert.Nil(t, json.Unmarshal(reversed, &actual))
+	assert.Equal(t, params, actual)
 }
