@@ -249,3 +249,51 @@ func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, expectedErrorStr, err.Error())
 }
+
+/*
+	Case 5: The handler receives a hander-function and a message.
+	First it tries to delete it, then if OK it sends the message to the handler
+	But, if handler returns error then resend the message. Let's reach the max number of retries
+*/
+func Test_handleMessage_resend_maxNumberOfRetries_reached(t *testing.T) {
+	session := &Mock4handleMessageAWSSession{}
+
+	const expectedReceipt = "a receipt handle"
+	const expectedMessage = "a message"
+
+	i := 0
+	handler := func(msg interface{}) error {
+		i++
+		assert.Equal(t, expectedMessage, msg)
+		return errors.New("intentional error") // this triggers the resend process
+	}
+
+	queue := queueSQS{
+		SQS:       session,
+		URL:       "",
+		msgIDerrs: map[string]int{},
+	}
+
+	msg := sqs.Message{}
+	msg.Body = aws.String(expectedMessage)
+	msg.ReceiptHandle = aws.String(expectedReceipt)
+	msg.MessageId = aws.String("messageID")
+
+	j := 0
+	err := func() error {
+		for {
+			err := queue.handleMessage(handler, &msg)
+			j++
+			if err != nil {
+				return err
+			}
+		}
+	}()
+
+	assert.NotNil(t, err)
+	assert.Equal(t, i+1, j)
+	assert.Equal(t, ErrorRequestMaxRetries, err)
+	assert.Equal(t, maxNumberOfRetries+1, session.TimesCalledDeleteMessage)
+	assert.Equal(t, maxNumberOfRetries, session.TimesCalledSendMessage)
+	assert.Equal(t, expectedReceipt, session.Receipt)
+}

@@ -19,6 +19,7 @@ var (
 	ErrorDeleteMessageTimeout = errors.New("timeout processing message from queue")
 	ErrorHandlerNotFound      = errors.New("handler not found in the register map")
 	ErrorMessageIDNotFound    = errors.New("response has no messageID value")
+	ErrorRequestMaxRetries    = errors.New("drop request from Queue as it failed maxNumberOfRetries times")
 )
 
 // iSQSSession represents the interface to connect to a Queue

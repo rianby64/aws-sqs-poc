@@ -19,7 +19,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 		QueueUrl:      aws.String(q.URL),
 		ReceiptHandle: m.ReceiptHandle,
 	}
-	releaseWait := make(chan bool, 1)
+	releaseWaitErr := make(chan error, 1)
 	timeoutSeconds := q.TimeoutSeconds
 
 	if timeoutSeconds == 0 {
@@ -28,7 +28,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 
 	go func() {
 		if _, err = q.SQS.DeleteMessage(&params); err != nil {
-			releaseWait <- true // this is... a thing
+			releaseWaitErr <- err // this is... a thing
 
 			/*
 				Let's consider the case when deletion returns with error...
@@ -40,17 +40,13 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 		}
 
 		msgID := ""
-		if m.MessageId != nil {
-			msgID = *m.MessageId
-			if _, ok := q.msgIDerrs[msgID]; !ok {
-				q.msgIDerrs[msgID] = 0
-			}
-		} else {
-			err = ErrorMessageIDNotFound
+		if msgID, err = q.prepareMessageID(m); err != nil {
+			releaseWaitErr <- err
+
 			return
 		}
 
-		releaseWait <- true
+		releaseWaitErr <- nil
 
 		/*
 			What about if the message was deleted? Then the handler takes the
@@ -62,13 +58,6 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 		if err2 := fn(msg); err2 != nil {
 			log.Errorf("running handler error: %v", err2)
 			q.msgIDerrs[msgID]++
-
-			if q.msgIDerrs[msgID] == maxNumberOfRetries {
-				log.Error("Drop request from Queue as it failed maxNumberOfRetries times")
-				delete(q.msgIDerrs, msgID)
-
-				return
-			}
 
 			if err2 := q.resendMessage(m); err2 != nil {
 				log.Errorf("resending messange to queue: %v", err2)
@@ -86,7 +75,7 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 	}()
 
 	select {
-	case <-releaseWait:
+	case <-releaseWaitErr:
 		log.Info("Processed message from queue")
 		return err
 	case <-time.After(time.Second * time.Duration(timeoutSeconds)):
@@ -119,4 +108,24 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 	}
 
 	return q.PutString("", *m.Body, delayRetry)
+}
+
+func (q *queueSQS) prepareMessageID(m *sqs.Message) (string, error) {
+	msgID := ""
+	if m.MessageId != nil {
+		msgID = *m.MessageId
+		if _, ok := q.msgIDerrs[msgID]; !ok {
+			q.msgIDerrs[msgID] = 0
+		}
+	} else {
+		return "", ErrorMessageIDNotFound
+	}
+
+	if q.msgIDerrs[msgID] == maxNumberOfRetries {
+		delete(q.msgIDerrs, msgID)
+
+		return "", ErrorRequestMaxRetries
+	}
+
+	return msgID, nil
 }
