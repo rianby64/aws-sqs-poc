@@ -39,6 +39,17 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 			return
 		}
 
+		msgID := ""
+		if m.MessageId != nil {
+			msgID = *m.MessageId
+			if _, ok := q.msgIDerrs[msgID]; !ok {
+				q.msgIDerrs[msgID] = 0
+			}
+		} else {
+			err = ErrorMessageIDNotFound
+			return
+		}
+
 		releaseWait <- true
 
 		/*
@@ -50,6 +61,14 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 		msg := q.unmarshal(aws.StringValue(m.Body))
 		if err2 := fn(msg); err2 != nil {
 			log.Errorf("running handler error: %v", err2)
+			q.msgIDerrs[msgID]++
+
+			if q.msgIDerrs[msgID] == maxNumberOfRetries {
+				log.Error("Drop request from Queue as it failed maxNumberOfRetries times")
+				delete(q.msgIDerrs, msgID)
+
+				return
+			}
 
 			if err2 := q.resendMessage(m); err2 != nil {
 				log.Errorf("resending messange to queue: %v", err2)
@@ -59,7 +78,11 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 				In conclusion. If you put releaseWait at the end of this
 				function, surely it may end up in flooding the queue
 			*/
+
+			return
 		}
+
+		delete(q.msgIDerrs, msgID)
 	}()
 
 	select {

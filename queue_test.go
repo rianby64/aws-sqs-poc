@@ -43,6 +43,7 @@ func (a *MockAWSSession1) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sqs.R
 			{
 				MessageAttributes: messageAttributes,
 				Body:              a.input.MessageBody,
+				MessageId:         aws.String("messageID"),
 			},
 		},
 	}

@@ -79,10 +79,12 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	session := &Mock4ReceiveMessageAWSSession{
 		ReceiveMessageResponses: []*sqs.Message{
 			{
-				Body: aws.String(msg1),
+				Body:      aws.String(msg1),
+				MessageId: aws.String("message id 1"),
 			},
 			{
-				Body: aws.String(msg2),
+				Body:      aws.String(msg2),
+				MessageId: aws.String("message id 2"),
 			},
 		},
 	}
@@ -101,6 +103,7 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	queue := queueSQS{
 		SQS:        session,
 		handlerMap: map[string]MessageHandler{},
+		msgIDerrs:  map[string]int{},
 	}
 
 	queue.Register("", handler)

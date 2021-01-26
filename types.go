@@ -8,6 +8,7 @@ import (
 const (
 	maxNumberOfMessages             = 10
 	waitTimeSeconds                 = 10
+	maxNumberOfRetries              = 5
 	retrySecondsToListen            = 5
 	timeoutSecondsDefault           = 5
 	nextDelayIncreaseSecondsDefault = 1
@@ -17,6 +18,7 @@ const (
 var (
 	ErrorDeleteMessageTimeout = errors.New("timeout processing message from queue")
 	ErrorHandlerNotFound      = errors.New("handler not found in the register map")
+	ErrorMessageIDNotFound    = errors.New("response has no messageID value")
 )
 
 // iSQSSession represents the interface to connect to a Queue
@@ -33,6 +35,7 @@ type queueSQS struct {
 	TimeoutSeconds           int
 	NextDelayIncreaseSeconds int64
 	handlerMap               map[string]MessageHandler
+	msgIDerrs                map[string]int
 }
 
 // MessageHandler receives from the queue the message. Use Register to define the handler

@@ -66,13 +66,15 @@ func Test_handleMessage_once(t *testing.T) {
 	}
 
 	queue := queueSQS{
-		SQS: session,
-		URL: "",
+		SQS:       session,
+		URL:       "",
+		msgIDerrs: map[string]int{},
 	}
 
 	msg := sqs.Message{}
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
+	msg.MessageId = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	<-finish
@@ -103,13 +105,15 @@ func Test_handleMessage_resend(t *testing.T) {
 	}
 
 	queue := queueSQS{
-		SQS: session,
-		URL: "",
+		SQS:       session,
+		URL:       "",
+		msgIDerrs: map[string]int{},
 	}
 
 	msg := sqs.Message{}
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
+	msg.MessageId = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	<-finish
@@ -138,13 +142,15 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 	}
 
 	queue := queueSQS{
-		SQS: session,
-		URL: "",
+		SQS:       session,
+		URL:       "",
+		msgIDerrs: map[string]int{},
 	}
 
 	msg := sqs.Message{}
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
+	msg.MessageId = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	assert.NotNil(t, err)
@@ -175,11 +181,13 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 		SQS:            session,
 		URL:            "",
 		TimeoutSeconds: 1,
+		msgIDerrs:      map[string]int{},
 	}
 
 	msg := sqs.Message{}
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
+	msg.MessageId = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	assert.NotNil(t, err)

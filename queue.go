@@ -89,6 +89,7 @@ func NewSQSQueue(sqssession iSQSSession, url string) SQSQueue {
 		TimeoutSeconds:           timeoutSecondsDefault,
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 		handlerMap:               map[string]MessageHandler{},
+		msgIDerrs:                map[string]int{},
 	}
 
 	return &queue
