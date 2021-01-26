@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -10,22 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/slack-go/slack"
 
-	"github.com/rianby64/aws-sqs-poc/queue"
+	queue "github.com/rianby64/aws-sqs-poc"
 )
-
-// MsgOptionText jajaja
-type MsgOptionText struct {
-	Text   string
-	Escape bool
-}
-
-// PostMessageArgs jajajaj
-type PostMessageArgs struct {
-	MsgOptionText MsgOptionText
-	ChannelID     string
-}
 
 // NewAWSSession - Creates a new AWS session.
 func NewAWSSession() (*session.Session, error) {
@@ -49,41 +34,27 @@ func NewAWSSession() (*session.Session, error) {
 
 // main it is
 func main() {
-	slackClient := slack.New("--")
-
-	i := 0
 	myhandler := func(msg interface{}) error {
-		params, ok := msg.(PostMessageArgs)
-		if !ok {
-			return errors.New("cannot cast msg into PostMessageArgs")
-		}
-
-		options := slack.MsgOptionText(params.MsgOptionText.Text, params.MsgOptionText.Escape)
-		_, _, err := slackClient.PostMessage(params.ChannelID, options)
-		i++
-		fmt.Println("Sending the message", options, slackClient, i)
-		return err
+		fmt.Println(msg)
+		return nil
 	}
 
 	awssession, _ := NewAWSSession()
 	sqssession := sqs.New(awssession)
 	myq := queue.NewSQSQueue(sqssession, "https://sqs.us-east-1.amazonaws.com/490043543248/my-queue-test")
-	myq.Register("", myhandler)
+	myq.Register("my-method", myhandler)
 
-	channelID := "C01JG8ALHHV"
-	msg := "This is my message to send ogo ogo ogo"
+	go myq.Listen("listen a-4")
+	go myq.Listen("listen b-4")
+	go myq.Listen("listen c-4")
 
-	optionsJSON, _ := json.Marshal(PostMessageArgs{
-		MsgOptionText: MsgOptionText{Text: msg, Escape: false},
-		ChannelID:     channelID,
-	})
+	for i := 0; i < 10; i++ {
+		if err := myq.PutString("my-method", fmt.Sprintf("my-string-to-process-in-the-queue-%d", i), 0); err != nil {
+			fmt.Println(err)
+		}
 
-	toSend := string(optionsJSON)
-
-	if err := myq.PutString("", toSend, 0); err != nil {
-		fmt.Println(err)
+		time.Sleep(time.Second)
 	}
 
-	fmt.Println(channelID)
 	time.Sleep(time.Hour)
 }

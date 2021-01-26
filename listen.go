@@ -17,7 +17,8 @@ func (q *queueSQS) listen() error {
 		MessageAttributeNames: []*string{
 			aws.String("All"), // Required
 		},
-		WaitTimeSeconds: aws.Int64(waitTimeSeconds),
+		WaitTimeSeconds:   aws.Int64(waitTimeSeconds),
+		VisibilityTimeout: aws.Int64(waitTimeSeconds), // (1) check footnote
 	}
 
 	log.Info("Starting the listen process")
@@ -58,3 +59,12 @@ func (q *queueSQS) matchHandler(msg *sqs.Message) (MessageHandler, error) {
 
 	return nil, ErrorHandlerNotFound
 }
+
+/*
+(1) The VisibilityTimeout ensures that only once the message will be available to one instace
+	Suppose we've two or more instances listening to the queue. If a message appears in the queue
+	then, different listeners can grab the same message at the same moment. AWS ensures that a read
+	operation will happen atomically. And, once the message has been delivered to one listener, this message
+	should become unavailable to all other listeners, and that's the purpose of VisibilityTimeout.
+	Even if the value of VisibilityTimeout equals zero, the atomicity property still works.
+*/

@@ -25,10 +25,13 @@ func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
 			DataType:    aws.String("Number"),
 			StringValue: aws.String(fmt.Sprintf("%d", nextDelay)),
 		},
-		"Method": {
+	}
+
+	if method != "" {
+		messageAttributes["Method"] = &sqs.MessageAttributeValue{
 			DataType:    aws.String("string"),
 			StringValue: aws.String(method),
-		},
+		}
 	}
 
 	params := sqs.SendMessageInput{
