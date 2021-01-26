@@ -29,7 +29,7 @@ func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
 
 	if method != "" {
 		messageAttributes["Method"] = &sqs.MessageAttributeValue{
-			DataType:    aws.String("string"),
+			DataType:    aws.String("String"),
 			StringValue: aws.String(method),
 		}
 	}
