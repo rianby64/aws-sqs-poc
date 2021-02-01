@@ -106,8 +106,6 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 			if err != nil {
 				return errors.Wrap(err, "Incorrect value of NextDelayRetry")
 			}
-		} else {
-			return ErrorDelayRetryAttrNil
 		}
 	}
 

@@ -251,6 +251,33 @@ func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
 	assert.Equal(t, expectedErrorStr, err.Error())
 }
 
+func Test_resendMessage_Nil_Method(t *testing.T) {
+	session := &Mock4handleMessageAWSSession{}
+	queue := queueSQS{
+		SQS:                      session,
+		URL:                      "",
+		TimeoutSeconds:           1,
+		NextDelayIncreaseSeconds: 3,
+	}
+
+	msg := sqs.Message{}
+	msg.Body = aws.String("")
+	msg.MessageAttributes = map[string]*sqs.MessageAttributeValue{
+		"Method": {
+			DataType:    aws.String("string"),
+			StringValue: nil,
+		},
+		"NextDelayRetry": {
+			DataType:    aws.String("number"),
+			StringValue: aws.String("10"),
+		},
+	}
+
+	err := queue.resendMessage(&msg)
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrorMethodAttrNil, err)
+}
+
 /*
 	Case 5: The handler receives a hander-function and a message.
 	First it tries to delete it, then if OK it sends the message to the handler
