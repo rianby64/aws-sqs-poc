@@ -99,15 +99,28 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 	messageAttributes := m.MessageAttributes
 
 	if delayRetryAttr, ok := messageAttributes["NextDelayRetry"]; ok && delayRetryAttr.StringValue != nil {
-		delayRetryValue, err := strconv.ParseInt(*delayRetryAttr.StringValue, 10, 64)
-		delayRetry = delayRetryValue
+		if delayRetryAttr.StringValue != nil {
+			delayRetryValue, err := strconv.ParseInt(*delayRetryAttr.StringValue, 10, 64)
+			delayRetry = delayRetryValue
 
-		if err != nil {
-			return errors.Wrap(err, "Incorrect value of NextDelayRetry")
+			if err != nil {
+				return errors.Wrap(err, "Incorrect value of NextDelayRetry")
+			}
+		} else {
+			return ErrorDelayRetryAttrNil
 		}
 	}
 
-	return q.PutString("", *m.Body, delayRetry)
+	method := ""
+	if methodAttr, ok := messageAttributes["NextDelayRetry"]; ok {
+		if methodAttr.StringValue != nil {
+			method = *methodAttr.StringValue
+		} else {
+			return ErrorMethodAttrNil
+		}
+	}
+
+	return q.PutString(method, *m.Body, delayRetry)
 }
 
 func (q *queueSQS) prepareMessageID(m *sqs.Message) (string, error) {

@@ -16,6 +16,8 @@ const (
 
 // These are the error definitions
 var (
+	ErrorDelayRetryAttrNil    = errors.New("delayRetryAttr value is nil")
+	ErrorMethodAttrNil        = errors.New("methodAttr value is nil")
 	ErrorDeleteMessageTimeout = errors.New("timeout processing message from queue")
 	ErrorHandlerNotFound      = errors.New("handler not found in the register map")
 	ErrorMessageIDNotFound    = errors.New("response has no messageID value")
