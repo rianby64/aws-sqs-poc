@@ -112,7 +112,7 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 	}
 
 	method := ""
-	if methodAttr, ok := messageAttributes["NextDelayRetry"]; ok {
+	if methodAttr, ok := messageAttributes["Method"]; ok {
 		if methodAttr.StringValue != nil {
 			method = *methodAttr.StringValue
 		} else {
