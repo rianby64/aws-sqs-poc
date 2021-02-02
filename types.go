@@ -38,6 +38,7 @@ type queueSQS struct {
 	NextDelayIncreaseSeconds int64
 	handlerMap               map[string]MessageHandler
 	msgIDerrs                map[string]int
+	thens                    map[string][]MessageHandler
 }
 
 // MessageHandler receives from the queue the message. Use Register to define the handler
@@ -49,8 +50,14 @@ type msgJSON struct {
 
 // SQSQueue defines the special SQS-Queue that accepts handlers via Register
 type SQSQueue interface {
-	PutString(method, msg string, delaySeconds int64) error
-	PutJSON(method string, msg interface{}, delaySeconds int64) error
+	PutString(method, msg string, delaySeconds int64) *sqsResponseThenable
+	PutJSON(method string, msg interface{}, delaySeconds int64) *sqsResponseThenable
 	Register(name string, method MessageHandler)
 	Listen()
+}
+
+type sqsResponseThenable struct {
+	queue     *queueSQS
+	messageID string
+	Error     error
 }

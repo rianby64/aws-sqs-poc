@@ -18,7 +18,9 @@ type MockAWSSession1 struct {
 
 func (a *MockAWSSession1) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	a.input = input
-	return nil, nil
+	return &sqs.SendMessageOutput{
+		MessageId: aws.String("messageID"),
+	}, nil
 }
 
 func (a *MockAWSSession1) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
@@ -74,7 +76,7 @@ func Test_Put_once_and_Handle(t *testing.T) {
 	queue.Register("", handlerMock1)
 	go queue.Listen()
 
-	if err := queue.PutString("", expected, 0); err != nil {
+	if err := queue.PutString("", expected, 0).Error; err != nil {
 		t.Error(err)
 	}
 
@@ -114,7 +116,7 @@ func Test_PutJSON_once_and_Handle(t *testing.T) {
 	queue.Register("method_name", handlerMock1)
 	go queue.Listen()
 
-	if err := queue.PutJSON("method_name", expected, 0); err != nil {
+	if err := queue.PutJSON("method_name", expected, 0).Error; err != nil {
 		t.Error(err)
 	}
 

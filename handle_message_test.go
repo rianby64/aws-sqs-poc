@@ -27,7 +27,9 @@ func (a *Mock4handleMessageAWSSession) SendMessage(input *sqs.SendMessageInput) 
 	a.TimesCalledSendMessage++
 	a.LastNextDelayRetry = input.MessageAttributes["NextDelayRetry"].StringValue
 	a.LastBodySent = input.MessageBody
-	return nil, nil
+	return &sqs.SendMessageOutput{
+		MessageId: aws.String("messageID"),
+	}, nil
 }
 
 func (a *Mock4handleMessageAWSSession) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
@@ -67,6 +69,7 @@ func Test_handleMessage_once(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:     map[string][]MessageHandler{},
 		SQS:       session,
 		URL:       "",
 		msgIDerrs: map[string]int{},
@@ -106,6 +109,7 @@ func Test_handleMessage_resend(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:     map[string][]MessageHandler{},
 		SQS:       session,
 		URL:       "",
 		msgIDerrs: map[string]int{},
@@ -143,6 +147,7 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:     map[string][]MessageHandler{},
 		SQS:       session,
 		URL:       "",
 		msgIDerrs: map[string]int{},
@@ -179,6 +184,7 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:          map[string][]MessageHandler{},
 		SQS:            session,
 		URL:            "",
 		TimeoutSeconds: 1,
@@ -201,6 +207,7 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 func Test_resendMessage_OK(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	queue := queueSQS{
+		thens:                    map[string][]MessageHandler{},
 		SQS:                      session,
 		URL:                      "",
 		TimeoutSeconds:           1,
@@ -229,6 +236,7 @@ func Test_resendMessage_OK(t *testing.T) {
 func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	queue := queueSQS{
+		thens:                    map[string][]MessageHandler{},
 		SQS:                      session,
 		URL:                      "",
 		TimeoutSeconds:           1,
@@ -254,6 +262,7 @@ func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
 func Test_resendMessage_Nil_Method(t *testing.T) {
 	session := &Mock4handleMessageAWSSession{}
 	queue := queueSQS{
+		thens:                    map[string][]MessageHandler{},
 		SQS:                      session,
 		URL:                      "",
 		TimeoutSeconds:           1,
@@ -297,6 +306,7 @@ func Test_handleMessage_resend_maxNumberOfRetries_reached(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:     map[string][]MessageHandler{},
 		SQS:       session,
 		URL:       "",
 		msgIDerrs: map[string]int{},
@@ -328,7 +338,9 @@ func Test_handleMessage_resend_maxNumberOfRetries_reached(t *testing.T) {
 
 // This test is for educational purposes
 func Test_unmarshal_complex_thing(t *testing.T) {
-	queue := queueSQS{}
+	queue := queueSQS{
+		thens: map[string][]MessageHandler{},
+	}
 
 	type complexObject struct {
 		Field1 *string

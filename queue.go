@@ -14,7 +14,11 @@ import (
 )
 
 // PutString sends an string to the queue
-func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
+func (q *queueSQS) PutString(method, msg string, delaySeconds int64) *sqsResponseThenable {
+	thenable := &sqsResponseThenable{
+		queue: q,
+	}
+
 	if q.NextDelayIncreaseSeconds == 0 {
 		q.NextDelayIncreaseSeconds = nextDelayIncreaseSecondsDefault
 	}
@@ -41,21 +45,28 @@ func (q *queueSQS) PutString(method, msg string, delaySeconds int64) error {
 		MessageAttributes: messageAttributes,
 	}
 
-	if _, err := q.SQS.SendMessage(&params); err != nil {
-		return err
+	response, err := q.SQS.SendMessage(&params)
+	if err != nil {
+		thenable.Error = err
+		return thenable
 	}
 
-	return nil
+	thenable.messageID = aws.StringValue(response.MessageId)
+	q.thens[thenable.messageID] = []MessageHandler{}
+
+	return thenable
 }
 
 // PutString sends a JSON to the queue
-func (q *queueSQS) PutJSON(method string, msg interface{}, delaySeconds int64) error {
+func (q *queueSQS) PutJSON(method string, msg interface{}, delaySeconds int64) *sqsResponseThenable {
+	thenable := &sqsResponseThenable{}
 	msgBytes, err := json.Marshal(msgJSON{
 		Msg: msg,
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "PutJSON error")
+		thenable.Error = errors.Wrap(err, "PutJSON error")
+		return thenable
 	}
 
 	return q.PutString(method, string(msgBytes), delaySeconds)
@@ -90,6 +101,7 @@ func NewSQSQueue(sqssession iSQSSession, url string) SQSQueue {
 		NextDelayIncreaseSeconds: nextDelayIncreaseSecondsDefault,
 		handlerMap:               map[string]MessageHandler{},
 		msgIDerrs:                map[string]int{},
+		thens:                    map[string][]MessageHandler{},
 	}
 
 	return &queue

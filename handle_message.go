@@ -118,7 +118,11 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 		}
 	}
 
-	return q.PutString(method, *m.Body, delayRetry)
+	thenable := q.PutString(method, *m.Body, delayRetry)
+	if thenable.Error != nil {
+		return thenable.Error
+	}
+	return nil
 }
 
 func (q *queueSQS) prepareMessageID(m *sqs.Message) (string, error) {

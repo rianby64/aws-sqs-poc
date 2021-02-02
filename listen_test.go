@@ -20,7 +20,9 @@ type Mock4ReceiveMessageAWSSession struct {
 }
 
 func (a *Mock4ReceiveMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
-	return nil, nil
+	return &sqs.SendMessageOutput{
+		MessageId: aws.String("messageID"),
+	}, nil
 }
 
 func (a *Mock4ReceiveMessageAWSSession) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error) {
@@ -53,6 +55,7 @@ func Test_listen_calls_ReceiveMessage(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:      map[string][]MessageHandler{},
 		SQS:        session,
 		handlerMap: map[string]MessageHandler{},
 	}
@@ -101,6 +104,7 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens:      map[string][]MessageHandler{},
 		SQS:        session,
 		handlerMap: map[string]MessageHandler{},
 		msgIDerrs:  map[string]int{},
@@ -131,6 +135,7 @@ func Test_listen_calls_ReceiveMessage_error_listen_error_too(t *testing.T) {
 	session.Waiter.Add(1)
 
 	queue := queueSQS{
+		thens:      map[string][]MessageHandler{},
 		SQS:        session,
 		handlerMap: map[string]MessageHandler{},
 	}
@@ -147,6 +152,7 @@ func Test_listen_calls_ReceiveMessage_error_listen_error_too(t *testing.T) {
 */
 func Test_matchHandler_not_found(t *testing.T) {
 	queue := queueSQS{
+		thens:      map[string][]MessageHandler{},
 		handlerMap: map[string]MessageHandler{},
 	}
 
@@ -170,6 +176,7 @@ func Test_matchHandler_match_named_handler(t *testing.T) {
 	}
 
 	queue := queueSQS{
+		thens: map[string][]MessageHandler{},
 		handlerMap: map[string]MessageHandler{
 			method: namedHandler,
 		},
@@ -208,7 +215,8 @@ func Test_listen_matchHandler_err(t *testing.T) {
 	session.Waiter.Add(1)
 
 	queue := queueSQS{
-		SQS: session,
+		thens: map[string][]MessageHandler{},
+		SQS:   session,
 	}
 
 	err := queue.listen()
@@ -230,7 +238,8 @@ func Test_listen_handleMessage_err(t *testing.T) {
 	session.Waiter.Add(1)
 
 	queue := queueSQS{
-		SQS: session,
+		thens: map[string][]MessageHandler{},
+		SQS:   session,
 	}
 	queue.Register("", func(msg interface{}) error {
 		return nil
