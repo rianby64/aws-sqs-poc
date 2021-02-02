@@ -10,7 +10,7 @@ ifeq ($(CONTAINER_ID_EXAMPLES),)
 		-e DISPLAY \
 		-v /run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro \
 		-v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-		-v /home/rianby64/aws-sqs-poc:/home/rianby64/go/src/github.com/rianby64/aws-sqs-poc \
+		-v /home/rianby64/sqs-retry:/home/rianby64/go/src/github.com/rianby64/sqs-retry \
 		--device /dev/dri \
 		--device /dev/snd \
 		--ipc=host \
