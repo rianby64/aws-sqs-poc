@@ -1,24 +1,23 @@
 package queue
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
 type MockAWSSessionThen struct {
-	Locker          sync.Mutex
-	input           *sqs.SendMessageInput
-	MethodAttribute *sqs.MessageAttributeValue
+	input *sqs.SendMessageInput
 }
 
 func (a *MockAWSSessionThen) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	a.input = input
 	return &sqs.SendMessageOutput{
-		MessageId: aws.String("messageID"),
+		MessageId:        aws.String("messageID"),
+		MD5OfMessageBody: aws.String("messageID"),
 	}, nil
 }
 
@@ -26,17 +25,15 @@ func (a *MockAWSSessionThen) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sq
 	if a.input == nil {
 		return nil, errors.New("nothing sent")
 	}
-	a.Locker.Lock()
 
-	messageAttributes := map[string]*sqs.MessageAttributeValue{
-		"NextDelayRetry": {
-			DataType:    aws.String("Number"),
-			StringValue: aws.String("10"),
-		},
+	messageAttributes := map[string]*sqs.MessageAttributeValue{}
+
+	if value, ok := a.input.MessageAttributes["NextDelayRetry"]; ok && value != nil {
+		messageAttributes["NextDelayRetry"] = value
 	}
 
-	if a.MethodAttribute != nil {
-		messageAttributes["Method"] = a.MethodAttribute
+	if value, ok := a.input.MessageAttributes["Method"]; ok && value != nil {
+		messageAttributes["Method"] = value
 	}
 
 	response := sqs.ReceiveMessageOutput{
@@ -45,6 +42,7 @@ func (a *MockAWSSessionThen) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sq
 				MessageAttributes: messageAttributes,
 				Body:              a.input.MessageBody,
 				MessageId:         aws.String("messageID"),
+				MD5OfBody:         aws.String("messageID"),
 			},
 		},
 	}
@@ -60,8 +58,23 @@ func Test_Then_ok(t *testing.T) {
 	s := &MockAWSSessionThen{}
 	q := NewSQSQueue(s, "")
 
-	msg := "send this and take it from then"
-	q.PutJSON("method", msg, 0).Then(func(msg interface{}) error {
+	expectedMsg := "send this and take it from then"
+	q.Register("method", func(msg interface{}) error {
 		return nil
 	})
+
+	go q.Listen()
+
+	finish := make(chan bool)
+	actualMsg := ""
+	q.PutJSON("method", expectedMsg, 0).Then(func(msg interface{}) error {
+		actualMsg = msg.(string)
+		finish <- true
+		return nil
+	})
+
+	<-finish
+
+	assert.Equal(t, expectedMsg, actualMsg)
+
 }

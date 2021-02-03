@@ -21,7 +21,8 @@ type Mock4ReceiveMessageAWSSession struct {
 
 func (a *Mock4ReceiveMessageAWSSession) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	return &sqs.SendMessageOutput{
-		MessageId: aws.String("messageID"),
+		MessageId:        aws.String("messageID"),
+		MD5OfMessageBody: aws.String("messageID"),
 	}, nil
 }
 
@@ -84,10 +85,12 @@ func Test_listen_calls_ReceiveMessage_with_two_responses(t *testing.T) {
 			{
 				Body:      aws.String(msg1),
 				MessageId: aws.String("message id 1"),
+				MD5OfBody: aws.String("message id 1"),
 			},
 			{
 				Body:      aws.String(msg2),
 				MessageId: aws.String("message id 2"),
+				MD5OfBody: aws.String("message id 2"),
 			},
 		},
 	}

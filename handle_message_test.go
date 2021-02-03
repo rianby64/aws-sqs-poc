@@ -28,7 +28,8 @@ func (a *Mock4handleMessageAWSSession) SendMessage(input *sqs.SendMessageInput) 
 	a.LastNextDelayRetry = input.MessageAttributes["NextDelayRetry"].StringValue
 	a.LastBodySent = input.MessageBody
 	return &sqs.SendMessageOutput{
-		MessageId: aws.String("messageID"),
+		MessageId:        aws.String("messageID"),
+		MD5OfMessageBody: aws.String("messageID"),
 	}, nil
 }
 
@@ -79,6 +80,7 @@ func Test_handleMessage_once(t *testing.T) {
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
 	msg.MessageId = aws.String("messageID")
+	msg.MD5OfBody = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	<-finish
@@ -119,6 +121,7 @@ func Test_handleMessage_resend(t *testing.T) {
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
 	msg.MessageId = aws.String("messageID")
+	msg.MD5OfBody = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	<-finish
@@ -157,6 +160,7 @@ func Test_handleMessage_deletion_error(t *testing.T) {
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
 	msg.MessageId = aws.String("messageID")
+	msg.MD5OfBody = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	assert.NotNil(t, err)
@@ -195,6 +199,7 @@ func Test_handleMessage_deletion_timeout(t *testing.T) {
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
 	msg.MessageId = aws.String("messageID")
+	msg.MD5OfBody = aws.String("messageID")
 	err := queue.handleMessage(handler, &msg)
 
 	assert.NotNil(t, err)
@@ -226,6 +231,7 @@ func Test_resendMessage_OK(t *testing.T) {
 			StringValue: aws.String(fmt.Sprintf("%d", currentRetry)),
 		},
 	}
+	msg.MD5OfBody = aws.String("messageID")
 
 	err := queue.resendMessage(&msg)
 	assert.Nil(t, err)
@@ -252,6 +258,7 @@ func Test_resendMessage_Incorrect_NextDelayRetry(t *testing.T) {
 			StringValue: aws.String(incorrectNumber),
 		},
 	}
+	msg.MD5OfBody = aws.String("messageID")
 
 	expectedErrorStr := fmt.Sprintf(`Incorrect value of NextDelayRetry: strconv.ParseInt: parsing "%s": invalid syntax`, incorrectNumber)
 	err := queue.resendMessage(&msg)
@@ -281,6 +288,7 @@ func Test_resendMessage_Nil_Method(t *testing.T) {
 			StringValue: aws.String("10"),
 		},
 	}
+	msg.MD5OfBody = aws.String("messageID")
 
 	err := queue.resendMessage(&msg)
 	assert.NotNil(t, err)
@@ -316,6 +324,7 @@ func Test_handleMessage_resend_maxNumberOfRetries_reached(t *testing.T) {
 	msg.Body = aws.String(expectedMessage)
 	msg.ReceiptHandle = aws.String(expectedReceipt)
 	msg.MessageId = aws.String("messageID")
+	msg.MD5OfBody = aws.String("messageID")
 
 	j := 0
 	err := func() error {

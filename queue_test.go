@@ -19,7 +19,8 @@ type MockAWSSession1 struct {
 func (a *MockAWSSession1) SendMessage(input *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	a.input = input
 	return &sqs.SendMessageOutput{
-		MessageId: aws.String("messageID"),
+		MessageId:        aws.String("messageID"),
+		MD5OfMessageBody: aws.String("messageID"),
 	}, nil
 }
 
@@ -46,6 +47,7 @@ func (a *MockAWSSession1) ReceiveMessage(input *sqs.ReceiveMessageInput) (*sqs.R
 				MessageAttributes: messageAttributes,
 				Body:              a.input.MessageBody,
 				MessageId:         aws.String("messageID"),
+				MD5OfBody:         aws.String("messageID"),
 			},
 		},
 	}

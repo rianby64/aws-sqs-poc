@@ -71,6 +71,9 @@ func (q *queueSQS) handleMessage(fn MessageHandler, m *sqs.Message) (err error) 
 			return
 		}
 
+		for _, handler := range q.thens[msgID] {
+			handler(msg)
+		}
 		delete(q.msgIDerrs, msgID)
 	}()
 
@@ -127,8 +130,8 @@ func (q *queueSQS) resendMessage(m *sqs.Message) error {
 
 func (q *queueSQS) prepareMessageID(m *sqs.Message) (string, error) {
 	msgID := ""
-	if m.MessageId != nil {
-		msgID = *m.MessageId
+	if m.MD5OfBody != nil {
+		msgID = *m.MD5OfBody
 		if _, ok := q.msgIDerrs[msgID]; !ok {
 			q.msgIDerrs[msgID] = 0
 		}
