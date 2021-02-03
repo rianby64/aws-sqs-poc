@@ -389,3 +389,101 @@ func Test_unmarshal_complex_thing(t *testing.T) {
 	assert.Nil(t, json.Unmarshal(reversed, &actual))
 	assert.Equal(t, params, actual)
 }
+
+// This test is for educational purposes
+func Test_unmarshal_2_several_structures(t *testing.T) {
+	type Type1 struct {
+		Type1  string  `json:"type1" validate:"string" type:"string" required:"true"`
+		Field1 float64 `json:"field1" validate:"number"`
+	}
+
+	type Type2 struct {
+		Type2  string   `json:"type2" type:"string" required:"true"`
+		Field2 *float64 `json:"field2" validate:"number"`
+	}
+
+	type Type3 struct {
+		Type3  string  `json:"type3" type:"string" required:"true"`
+		Field3 *string `json:"field3" validate:"string"`
+	}
+
+	struct1 := Type1{
+		Type1:  "type 1",
+		Field1: 1.0,
+	}
+
+	struct2 := Type2{
+		Type2:  "type 1",
+		Field2: aws.Float64(1.0),
+	}
+
+	struct3 := Type3{
+		Type3:  "type 1",
+		Field3: aws.String("type 3"),
+	}
+
+	str1B, _ := json.Marshal(struct1)
+	str1 := string(str1B)
+	str2B, _ := json.Marshal(struct2)
+	str2 := string(str2B)
+	str3B, _ := json.Marshal(struct3)
+	str3 := string(str3B)
+
+	fmt.Println(str1, str2, str3)
+
+	reversed1 := Type1{}
+	reversed2 := Type2{}
+	reversed3 := Type3{}
+
+	func() {
+		if err := json.Unmarshal(str1B, &reversed3); err == nil {
+			fmt.Println("reversed 1 for 3")
+			return
+		}
+
+		if err := json.Unmarshal(str1B, &reversed2); err == nil {
+			fmt.Println("reversed 1 for 2")
+			return
+		}
+
+		if err := json.Unmarshal(str1B, &reversed1); err == nil {
+			fmt.Println("reversed 1 for 1")
+			return
+		}
+	}()
+
+	func() {
+		if err := json.Unmarshal(str2B, &reversed3); err == nil {
+			fmt.Println("reversed 2 for 3")
+			return
+		}
+
+		if err := json.Unmarshal(str2B, &reversed2); err == nil {
+			fmt.Println("reversed 2 for 2")
+			return
+		}
+
+		if err := json.Unmarshal(str2B, &reversed1); err == nil {
+			fmt.Println("reversed 2 for 1")
+			return
+		}
+	}()
+
+	func() {
+		if err := json.Unmarshal(str3B, &reversed3); err == nil {
+			fmt.Println("reversed 3 for 3")
+			return
+		}
+
+		if err := json.Unmarshal(str3B, &reversed2); err == nil {
+			fmt.Println("reversed 3 for 2")
+			return
+		}
+
+		if err := json.Unmarshal(str3B, &reversed1); err == nil {
+			fmt.Println("reversed 3 for 1")
+			return
+		}
+	}()
+
+}
